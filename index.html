@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外幣模擬試卷-內考專用</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        /* 頁面背景：冷灰色調 */
+        body { 
+            background-color: #f0f3f5; 
+            font-family: "Microsoft JhengHei", sans-serif;
+            margin: 0; padding: 10px;
+            display: flex; justify-content: center;
+            -webkit-user-select: none; user-select: none;
+        }
+
+        /* 容器：純白專業感，頂部加上深藍飾條 */
+        .paper {
+            background-color: #ffffff;
+            width: 100%; max-width: 600px;
+            min-height: 95vh;
+            padding: 40px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-top: 8px solid #1e3799; /* 深藍色頂部飾條 */
+            border-radius: 4px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* 標題區塊 */
+        .exam-header {
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+        }
+        .exam-title { 
+            font-size: 1.5rem; font-weight: bold; color: #1e3799; margin: 0 0 8px 0; 
+        }
+        .exam-tag {
+            display: inline-block; background: #e8f0fe; color: #1e3799;
+            padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;
+        }
+
+        /* 題目顯示 */
+        .question-section { margin-top: 40px; min-height: 180px; }
+        #question-content { 
+            white-space: pre-wrap; font-size: 1.25rem; line-height: 1.7; color: #2c3e50;
+        }
+
+        /* 1, 2, 3, 4 選項按鈕區 */
+        .answer-sheet {
+            margin-top: 50px;
+            border-top: 1px dashed #ddd;
+            padding-top: 35px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+        }
+
+        /* 3D 按鈕樣式 */
+        .opt-circle {
+            width: 65px; height: 65px;
+            border: 2px solid #bdc3c7;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.7rem; font-weight: bold; color: #34495e;
+            cursor: pointer; background: #fff;
+            margin: auto;
+            box-shadow: 0 6px #dcdde1;
+            transition: all 0.1s;
+            position: relative; top: 0;
+        }
+
+        /* 按壓回饋 */
+        .opt-circle:active {
+            box-shadow: 0 2px #dcdde1;
+            top: 4px;
+        }
+
+        /* --- 批改狀態 --- */
+
+        /* 答對：專業藍色 */
+        .correct-mark { 
+            border-color: #2e86de !important; color: #2e86de !important; 
+            background-color: #f1f7ff !important;
+            box-shadow: none !important; top: 4px !important;
+        }
+        .correct-mark::after {
+            content: ""; position: absolute; width: 80px; height: 80px;
+            border: 4px solid rgba(46, 134, 222, 0.3); border-radius: 50%;
+            animation: pulse 0.4s ease-out;
+        }
+
+        /* 答錯：警示紅色 */
+        .wrong-mark { 
+            border-color: #ee5253 !important; color: #ee5253 !important; 
+            background-color: #fff5f5 !important;
+            box-shadow: none !important; top: 4px !important;
+            text-decoration: line-through;
+        }
+
+        /* 結果提示文字 */
+        #result-text { text-align: center; font-size: 1.3rem; font-weight: bold; margin-top: 35px; min-height: 35px; }
+        .msg-correct { color: #2e86de; }
+        .msg-wrong { color: #ee5253; }
+
+        /* 下一題按鈕 */
+        #next-btn {
+            display: none; width: 100%; max-width: 250px; margin: 40px auto 0; padding: 15px;
+            background: #1e3799; color: white; border: none; font-size: 1.1rem; 
+            font-weight: bold; cursor: pointer; text-align: center; border-radius: 8px;
+            box-shadow: 0 4px #0c2461; transition: all 0.1s; position: relative; top: 0;
+        }
+        #next-btn:active { box-shadow: 0 0px; top: 4px; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="paper">
+    <div class="exam-header">
+        <div class="exam-title">外幣收付非投資型保險模擬試卷</div>
+        <div class="exam-tag">內考專用</div>
+    </div>
+
+    <div class="question-section">
+        <div id="question-content">正在連線至內考題庫...</div>
+    </div>
+
+    <div class="answer-sheet">
+        <div class="opt-circle" onclick="submitChoice('1', this)">1</div>
+        <div class="opt-circle" onclick="submitChoice('2', this)">2</div>
+        <div class="opt-circle" onclick="submitChoice('3', this)">3</div>
+        <div class="opt-circle" onclick="submitChoice('4', this)">4</div>
+    </div>
+
+    <div id="result-text"></div>
+    <div style="text-align: center;">
+        <button id="next-btn" onclick="nextQuestion()">下一題 (NEXT)</button>
+    </div>
+    
+    <div style="margin-top: 60px; text-align: center; color: #bdc3c7; font-size: 0.8rem; letter-spacing: 1px;">
+        INTERNAL USE ONLY ・ 僅供內部教育訓練使用
+    </div>
+</div>
+
+<script>
+    // 已更新為你的新資料網址
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT7m73p0fW23Dz_TPqu5oPxDQIJIGw4a4326gco7TYFlW_3h86IMIvYz2ZdpaERSnpBPM3AGYe4PeNU/pub?gid=1980659354&single=true&output=csv';
+    
+    let quizBank = [];
+    let currentQuiz = null;
+
+    Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        complete: function(results) {
+            quizBank = results.data.filter(row => row.正確答案 && row.題目內容);
+            if (quizBank.length > 0) {
+                nextQuestion();
+            } else {
+                document.getElementById('question-content').innerText = "讀取失敗，請確認雲端表單權限與標題。";
+            }
+        }
+    });
+
+    function nextQuestion() {
+        currentQuiz = quizBank[Math.floor(Math.random() * quizBank.length)];
+        document.getElementById('question-content').innerText = currentQuiz.題目內容;
+        document.getElementById('result-text').innerText = "";
+        document.getElementById('next-btn').style.display = "none";
+        document.querySelectorAll('.opt-circle').forEach(btn => {
+            btn.className = 'opt-circle';
+            btn.style.pointerEvents = 'auto';
+        });
+    }
+
+    function submitChoice(userChoice, element) {
+        const correctAnswer = currentQuiz.正確答案.toString().trim();
+        const resultDiv = document.getElementById('result-text');
+        
+        document.querySelectorAll('.opt-circle').forEach(btn => btn.style.pointerEvents = 'none');
+
+        if (userChoice === correctAnswer) {
+            element.classList.add('correct-mark');
+            resultDiv.innerHTML = '<span class="msg-correct">✓ 正確</span>';
+        } else {
+            element.classList.add('wrong-mark');
+            resultDiv.innerHTML = `<span class="msg-wrong">✕ 錯誤（正解：${correctAnswer}）</span>`;
+        }
+        document.getElementById('next-btn').style.display = "block";
+    }
+</script>
+
+</body>
+</html>
